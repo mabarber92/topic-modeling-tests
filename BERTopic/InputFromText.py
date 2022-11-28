@@ -8,9 +8,11 @@ Created on Fri Nov 18 14:21:32 2022
 import re
 import pandas as pd
 from math import ceil
+from openiti.helper.funcs import text_cleaner
 
 def changePars(maxCh, seqCap, minSplit):
     adaptiveSplit = False
+    print("\n---------\n")
     print("Number of splits too small for the sequence cap. Minimum split number: ")
     minSplitCap = maxCh/seqCap
     print(minSplitCap)
@@ -18,27 +20,22 @@ def changePars(maxCh, seqCap, minSplit):
     seqCapCap = maxCh/minSplit
     print(seqCapCap)
     print("\n---------\n")
-    print("Choose to \n 1. Change split number \n 2. Change sequence cap \n 3. Adaptive split (for each milestone use the minimum number of splits possible for the sequence cap Enter 1, 2 or 3.")
+    print("Choose to do one or all of the following: \n 1. Change split number \n 2. Change sequence cap \n 3. Adaptive split (for each milestone use the minimum number of splits possible for the sequence cap).")
+    print("Choose new split number: (minimum number of splits for current cap: " + str(minSplitCap) + ")")
+    minSplit = int(input())
+    seqCapCap = maxCh/minSplit
+    print("Choose a new sequence cap: (minimum sequence cap for your chosen split number: " + str(seqCapCap) + ")")
+    seqCap = int(input())
+    print("Would you prefer to use an adaptive split for this sequence cap? (0 for no and 1 for yes)")
     choice = input()
-    print(choice)
-    if choice == "1." or choice == "1":
-        
-        print("Choose new split number:")
-        minSplit = int(input())
-        while minSplit < minSplitCap:
-            print("Number of splits too low. Choose a higher count")
-            minSplit = int(input())
-    if choice == "2." or choice == "2":
-        print("Choose new sequence cap:")
-        seqCap = int(input())
-        while seqCap < seqCapCap:
-            print("Length of sequence too low. Choose a higher count")
-            seqCap = int(input())
-    if choice == "3." or choice == "3":
+    if choice == "1":
         adaptiveSplit = True
+    else:
+        adaptiveSplit = False
+    
     return seqCap, minSplit, adaptiveSplit
 
-def InputFromText(textPath, outPath, seqCap = 512, minSplit = 2, adaptiveSplit = False):
+def InputFromText(textPath, outPath = None, seqCap = 512, minSplit = 2, adaptiveSplit = False):
     """Take Arabic source text split it on milestones and then split based
     on the specified number of splits. seqCap specifies the maximum length 
     in chars of the sequence. The default value is the maximum sequence length
@@ -67,7 +64,7 @@ def InputFromText(textPath, outPath, seqCap = 512, minSplit = 2, adaptiveSplit =
     
     # Check that the supplied parameters will work for the text
     maxCh = msDf["chLength"].max()
-    if maxCh/minSplit > seqCap and not adaptiveSplit:
+    while maxCh/minSplit > seqCap and not adaptiveSplit:
         seqCap, minSplit, adaptiveSplit = changePars(maxCh, seqCap, minSplit)
     
     print(seqCap, minSplit, adaptiveSplit)
@@ -79,9 +76,11 @@ def InputFromText(textPath, outPath, seqCap = 512, minSplit = 2, adaptiveSplit =
     outDictList = []
     for ms in msDictList:
         
+        
         if adaptiveSplit:
             splitCount = ceil(ms["chLength"]/seqCap)
-            tokens = ms["text"].split()
+            msText = text_cleaner(ms["text"])
+            tokens = msText.split()
             
             tokCount = len(tokens)
             
@@ -97,6 +96,39 @@ def InputFromText(textPath, outPath, seqCap = 512, minSplit = 2, adaptiveSplit =
                         split2 = " ".join(tokens[-ceil(remainingToks/2)])
                         outDictList.append({"ms": ms["ms"], "split": i, "text": split1})
                         outDictList.append({"ms": ms["ms"], "split": i+1, "text": split2})
+                        if len(split1) > seqCap or len(split2) > seqCap:
+                            print("WARNING: a sequence exceeds your specified cap")
+                    else:
+                        outDictList.append({"ms": ms["ms"], "split": i, "text": split})
+                
+                else:
+                    lastTok = pos+tokWidth
+                    split = " ".join(tokens[pos:lastTok])
+                    while len(split) > seqCap:
+                        lastTok = lastTok - 1
+                        split = " ".join(tokens[pos:lastTok])
+                    outDictList.append({"ms": ms["ms"], "split": i, "text": split})
+                    pos = lastTok
+        else:
+            
+            tokens = ms["text"].split()
+            
+            tokCount = len(tokens)
+            
+            tokWidth = ceil(tokCount/minSplit)
+            pos = 0
+            for i in range(0, minSplit):
+                remainingToks = tokCount - pos
+                if remainingToks < tokWidth:
+                    split = " ".join(tokens[-remainingToks:])
+                    if len(split) > seqCap:
+                        
+                        split1 = " ".join(tokens[-remainingToks:-ceil(remainingToks/2)])
+                        split2 = " ".join(tokens[-ceil(remainingToks/2)])
+                        outDictList.append({"ms": ms["ms"], "split": i, "text": split1})
+                        outDictList.append({"ms": ms["ms"], "split": i+1, "text": split2})
+                        if len(split1) > seqCap or len(split2) > seqCap:
+                            print("WARNING: a sequence exceeds your specified cap")
                     else:
                         outDictList.append({"ms": ms["ms"], "split": i, "text": split})
                 
@@ -110,10 +142,13 @@ def InputFromText(textPath, outPath, seqCap = 512, minSplit = 2, adaptiveSplit =
                     pos = lastTok
     
     outDf = pd.DataFrame(outDictList)
+    if outPath is not None:
+        outDf.to_csv(outPath, index=False, encoding='utf-8-sig')
     return outDf                
         
     
-path = "C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/corpus/0310Tabari.Tarikh.Shamela0009783BK1-ara1.mARkdown"
-out = InputFromText(path, "")
+path = "C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/corpus/0845Maqrizi.Mawaciz.MAB02082022-ara1.completed"
+outPath = "C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/Maqrizi.Mawaciz-seq-512-adaptiveSplit.csv"
+out = InputFromText(path, outPath, seqCap=512, adaptiveSplit=True)
     
                                

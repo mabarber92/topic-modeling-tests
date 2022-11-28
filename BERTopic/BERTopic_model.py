@@ -22,23 +22,23 @@ def check_cuda(model):
 	return model,cuda_device
 
 
-df = pd.read_csv("C:/Users/mathe/Documents/Github-repos/fitna-study/search_phrases/Yusuf_search/all_results.csv")
+df = pd.read_csv("C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/Maqrizi.Mawaciz-seq-512-adaptiveSplit.csv")
 
 print("commencing embedding...")
 model_name = "aubmindlab/bert-base-arabertv02"
-max_seq_length=256
+max_seq_length=512
 
 word_embedding_model = models.Transformer(model_name, max_seq_length)
 pooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension(),
                                pooling_mode_mean_tokens=True)
 dense_model = models.Dense(in_features=pooling_model.get_sentence_embedding_dimension(), 
-                           out_features=256, 
+                           out_features=512, 
                            activation_function=nn.Tanh())
 model = SentenceTransformer(modules=[word_embedding_model, pooling_model, dense_model])
 model, cuda = check_cuda(model)
 print("model loaded")
 print(cuda)
-sentences = df["phrase"].tolist()
+sentences = df["text"].tolist()
 
 embeds = model.encode(sentences)
 print("embeds created...")
@@ -51,7 +51,7 @@ topic_model = BERTopic(language='multilingual')
 print("clustering and topic model built")
 
 # df is a dataframe. df['title'] is the column of text we're modeling
-df['topic'], probabilities = topic_model.fit_transform(df['phrase'], embeds)
+df['Topic'], probabilities = topic_model.fit_transform(df['text'], embeds)
 
 # # Add step to perform subtopic classification for larger sentence collections
 # sub_tops = 50
@@ -75,6 +75,11 @@ df['topic'], probabilities = topic_model.fit_transform(df['phrase'], embeds)
 
 # # name clusters
 # df['topic_name'] = app.name_topics((df['phrase'], df['topic']))[0]
-df = df.sort_values(by=['topic'])
 
-df.to_csv("Yusuf_search/topic_model_test_arabertv02_noset2.csv", index=False, encoding='utf-8-sig')
+topic_info = topic_model.get_topic_info()
+df = df.merge(topic_info, on='Topic', how='left')
+df[["Topic", 't1', 't2', 't3', 't4']] = df["Name"].str.split("_", expand=True)
+df = df.drop(columns=['Name'])
+df = df.sort_values(by=['t1', 't2', 't3', 't4'])
+
+df.to_csv("C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/Maqrizi.Mawaciz-seq-512-adaptiveSplit-Topics.csv", index=False, encoding='utf-8-sig')
