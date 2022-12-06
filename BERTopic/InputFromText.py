@@ -9,6 +9,7 @@ import re
 import pandas as pd
 from math import ceil
 from openiti.helper.funcs import text_cleaner
+import os
 
 def changePars(maxCh, seqCap, minSplit):
     adaptiveSplit = False
@@ -35,7 +36,7 @@ def changePars(maxCh, seqCap, minSplit):
     
     return seqCap, minSplit, adaptiveSplit
 
-def InputFromText(textPath, outPath = None, seqCap = 512, minSplit = 2, adaptiveSplit = False):
+def InputFromText(textPath, outPath = None, seqCap = 512, minSplit = 2, adaptiveSplit = False, uriCol = False, shingle=False):
     """Take Arabic source text split it on milestones and then split based
     on the specified number of splits. seqCap specifies the maximum length 
     in chars of the sequence. The default value is the maximum sequence length
@@ -45,20 +46,36 @@ def InputFromText(textPath, outPath = None, seqCap = 512, minSplit = 2, adaptive
     for confirmation. Adaptive split instead creates the optimum split for
     each milestone, ensuring the sequent cap is not exceeded"""
     
-    with open(textPath, encoding ='utf-8-sig') as f:
-        text = f.read()
-        f.close()
-        
-    text = re.split("#META#Header#End#", text)[-1]
+    if type(textPath) == list:
+        if len(textPath) > 1:
+            print("Multiple texts detected - adding URI column to output")
+            uriCol = True
+    else:
+        textPath = [textPath]
     
-    # Create a df containing milestones and corresponding text
-    msSplits = re.split(r"ms(\d+)", text)
-    totalSplits = len(msSplits)
     msDictList = []
     
-    for idx, split in enumerate(msSplits):
-        if not re.match(r"\d", split) and idx+1 != totalSplits:
-            msDictList.append({"ms": msSplits[idx+1], "text": split, "chLength": len(split)})
+    for path in textPath:
+        
+        with open(path, encoding ='utf-8-sig') as f:
+            text = f.read()
+            f.close()
+            
+        text = re.split("#META#Header#End#", text)[-1]
+        
+        # Create a df containing milestones and corresponding text
+        msSplits = re.split(r"ms(\d+)", text)
+        totalSplits = len(msSplits)
+        
+        if uriCol:
+            uri = path.split("\\")[-1]
+            for idx, split in enumerate(msSplits):
+                if not re.match(r"\d", split) and idx+1 != totalSplits:
+                    msDictList.append({"ms": msSplits[idx+1], "text": split, "chLength": len(split), "uri": uri})
+        else:
+            for idx, split in enumerate(msSplits):
+                if not re.match(r"\d", split) and idx+1 != totalSplits:
+                    msDictList.append({"ms": msSplits[idx+1], "text": split, "chLength": len(split)})
     
     msDf = pd.DataFrame(msDictList)
     
@@ -71,6 +88,7 @@ def InputFromText(textPath, outPath = None, seqCap = 512, minSplit = 2, adaptive
     
     # Clean up df
     del msDf
+        
     
     # Loop through ms dict to create relevant splits
     outDictList = []
@@ -85,70 +103,136 @@ def InputFromText(textPath, outPath = None, seqCap = 512, minSplit = 2, adaptive
             tokCount = len(tokens)
             
             tokWidth = ceil(tokCount/splitCount)
-            pos = 0
-            for i in range(0, splitCount):
-                remainingToks = tokCount - pos
-                if remainingToks < tokWidth:
-                    split = " ".join(tokens[-remainingToks:])
-                    if len(split) > seqCap:
-                        
-                        split1 = " ".join(tokens[-remainingToks:-ceil(remainingToks/2)])
-                        split2 = " ".join(tokens[-ceil(remainingToks/2)])
-                        outDictList.append({"ms": ms["ms"], "split": i, "text": split1})
-                        outDictList.append({"ms": ms["ms"], "split": i+1, "text": split2})
-                        if len(split1) > seqCap or len(split2) > seqCap:
-                            print("WARNING: a sequence exceeds your specified cap")
-                    else:
-                        outDictList.append({"ms": ms["ms"], "split": i, "text": split})
-                
-                else:
-                    lastTok = pos+tokWidth
-                    split = " ".join(tokens[pos:lastTok])
-                    while len(split) > seqCap:
-                        lastTok = lastTok - 1
-                        split = " ".join(tokens[pos:lastTok])
-                    outDictList.append({"ms": ms["ms"], "split": i, "text": split})
-                    pos = lastTok
+            iterCap = splitCount
         else:
-            
             tokens = ms["text"].split()
             
             tokCount = len(tokens)
             
             tokWidth = ceil(tokCount/minSplit)
-            pos = 0
-            for i in range(0, minSplit):
-                remainingToks = tokCount - pos
-                if remainingToks < tokWidth:
-                    split = " ".join(tokens[-remainingToks:])
-                    if len(split) > seqCap:
-                        
-                        split1 = " ".join(tokens[-remainingToks:-ceil(remainingToks/2)])
-                        split2 = " ".join(tokens[-ceil(remainingToks/2)])
-                        outDictList.append({"ms": ms["ms"], "split": i, "text": split1})
-                        outDictList.append({"ms": ms["ms"], "split": i+1, "text": split2})
-                        if len(split1) > seqCap or len(split2) > seqCap:
-                            print("WARNING: a sequence exceeds your specified cap")
-                    else:
-                        outDictList.append({"ms": ms["ms"], "split": i, "text": split})
-                
+            iterCap = minSplit
+        pos = 0
+        splitid = 0
+        remainingToks = tokCount
+        finalIt = False
+        
+        while remainingToks > 0:            
+            
+            
+            lastTok = pos+tokWidth
+            split = " ".join(tokens[pos:lastTok])
+            
+            while len(split) > seqCap:
+                lastTok = lastTok - 1
+                split = " ".join(tokens[pos:lastTok])
+            if len(split) != 0 and not re.match(r"\s+", split):
+                if uriCol:
+                    outDictList.append({"ms": ms["ms"], "split": splitid, "text": split, "uri": ms["uri"]})
                 else:
-                    lastTok = pos+tokWidth
-                    split = " ".join(tokens[pos:lastTok])
-                    while len(split) > seqCap:
-                        lastTok = lastTok - 1
-                        split = " ".join(tokens[pos:lastTok])
-                    outDictList.append({"ms": ms["ms"], "split": i, "text": split})
-                    pos = lastTok
+                    outDictList.append({"ms": ms["ms"], "split": splitid, "text": split})
+            if shingle:
+                pos = lastTok - ceil(tokWidth/2)
+            else:
+                pos = lastTok
+            remainingToks = tokCount - pos
+            splitid = splitid + 1
+            
+            if remainingToks < tokWidth:
+                
+                split = " ".join(tokens[-remainingToks:])                
+                if len(split) > seqCap:
+                    
+                    split1 = " ".join(tokens[-remainingToks:-ceil(remainingToks/2)])
+                    
+                        
+                    split2 = " ".join(tokens[-ceil(remainingToks/2)])
+                   
+                        
+                    if len(split1) != 0 and not re.match(r"\s+", split1):
+                        if uriCol:
+                            outDictList.append({"ms": ms["ms"], "split": splitid, "text": split1, "uri": ms["uri"]})
+                        else:
+                            outDictList.append({"ms": ms["ms"], "split": splitid, "text": split1})
+                    if len(split2) != 0 and not re.match(r"\s+", split2):
+                        splitid = splitid + 1
+                        if uriCol:
+                            outDictList.append({"ms": ms["ms"], "split": splitid, "text": split1, "uri": ms["uri"]})
+                        else:
+                            outDictList.append({"ms": ms["ms"], "split": splitid, "text": split2})
+                    if len(split1) > seqCap or len(split2) > seqCap:
+                        print("WARNING: a sequence exceeds your specified cap")
+                    remainingToks = 0
+                else:
+                    if len(split) != 0 and not re.match(r"\s+", split):
+                        if uriCol:
+                            outDictList.append({"ms": ms["ms"], "split": splitid, "text": split, "uri": ms["uri"]})
+                        else:
+                            outDictList.append({"ms": ms["ms"], "split": splitid, "text": split})
+                    remainingToks = 0
+           
+                
+            
+        # else:
+            
+        #     tokens = ms["text"].split()
+            
+        #     tokCount = len(tokens)
+            
+        #     tokWidth = ceil(tokCount/minSplit)
+        #     pos = 0
+        #     for i in range(0, minSplit):
+        #         remainingToks = tokCount - pos
+        #         if remainingToks < tokWidth:
+        #             split = " ".join(tokens[-remainingToks:])
+        #             if len(split) > seqCap:
+                        
+        #                 split1 = " ".join(tokens[-remainingToks:-ceil(remainingToks/2)])
+        #                 split2 = " ".join(tokens[-ceil(remainingToks/2)])
+        #                 if uriCol:
+        #                     outDictList.append({"ms": ms["ms"], "split": i, "text": split1, "uri": ms["uri"]})
+        #                 else:
+        #                     outDictList.append({"ms": ms["ms"], "split": i, "text": split1})
+        #                 if uriCol:
+        #                     outDictList.append({"ms": ms["ms"], "split": i, "text": split2, "uri": ms["uri"]})
+        #                 else:
+        #                     outDictList.append({"ms": ms["ms"], "split": i+1, "text": split2})
+        #                 if len(split1) > seqCap or len(split2) > seqCap:
+        #                     print("WARNING: a sequence exceeds your specified cap")
+        #             else:
+        #                 if uriCol:
+        #                     outDictList.append({"ms": ms["ms"], "split": i, "text": split, "uri": ms["uri"]})
+        #                 else:
+        #                     outDictList.append({"ms": ms["ms"], "split": i, "text": split})
+                
+        #         else:
+        #             lastTok = pos+tokWidth
+        #             split = " ".join(tokens[pos:lastTok])
+        #             while len(split) > seqCap:
+        #                 lastTok = lastTok - 1
+        #                 split = " ".join(tokens[pos:lastTok])
+        #             if uriCol:
+        #                     outDictList.append({"ms": ms["ms"], "split": i, "text": split, "uri": ms["uri"]})
+        #             else:
+        #                 outDictList.append({"ms": ms["ms"], "split": i, "text": split})
+        #             pos = lastTok
     
     outDf = pd.DataFrame(outDictList)
     if outPath is not None:
         outDf.to_csv(outPath, index=False, encoding='utf-8-sig')
     return outDf                
         
-    
+   
 path = "C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/corpus/0845Maqrizi.Mawaciz.MAB02082022-ara1.completed"
-outPath = "C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/Maqrizi.Mawaciz-seq-512-adaptiveSplit.csv"
-out = InputFromText(path, outPath, seqCap=512, adaptiveSplit=True)
+outPath = "C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/MaqriziCorpus-ShinglingTests/256-adaptiveSplit.csv"
+
+inDir = "C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/corpus/MaqriziCorpus"
+path = []
+for root, dirs, files in os.walk(inDir, topdown=False):
+    for name in files:
+        path.append(os.path.join(root, name))
+
+print(path)
+
+out = InputFromText(path, outPath, seqCap=256, adaptiveSplit=True, shingle=True)
     
                                

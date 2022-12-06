@@ -22,7 +22,7 @@ def check_cuda(model):
 	return model,cuda_device
 
 
-df = pd.read_csv("C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/Maqrizi.Mawaciz-seq-512-adaptiveSplit.csv")
+df = pd.read_csv("C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/MaqriziCorpus-ShinglingTests/512-adaptiveSplit.csv").dropna()
 
 print("commencing embedding...")
 model_name = "aubmindlab/bert-base-arabertv02"
@@ -82,4 +82,4 @@ df[["Topic", 't1', 't2', 't3', 't4']] = df["Name"].str.split("_", expand=True)
 df = df.drop(columns=['Name'])
 df = df.sort_values(by=['t1', 't2', 't3', 't4'])
 
-df.to_csv("C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/Maqrizi.Mawaciz-seq-512-adaptiveSplit-Topics.csv", index=False, encoding='utf-8-sig')
+df.to_csv("C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/MaqriziCorpus-ShinglingTests/512-adaptiveSplit-Topics.csv", index=False, encoding='utf-8-sig')
