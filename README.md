@@ -1,2 +1,11 @@
 # topic-modeling-tests
 Repo for Topic modelling test scripts, test corpora and outputs
+
+
+## To do
+- Wrap BERTopic_model.py in a function
+- Research 'Online' approach to updating topic models for large corpora - [partial_fit()](https://maartengr.github.io/BERTopic/api/bertopic.html#bertopic._bertopic.BERTopic.partial_fit) for identifying related topics? 
+- Research [build in visualisation](https://maartengr.github.io/BERTopic/getting_started/visualization/visualization.html)
+- Attempt searching topics using [.find_topics()](https://maartengr.github.io/BERTopic/getting_started/search/search.html)
+- Reorganise BERTopic - separating data, graphs and scripts
+- Create an app.py that brings together the various functions into one piece that takes text files as an input
