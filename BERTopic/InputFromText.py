@@ -222,17 +222,17 @@ def InputFromText(textPath, outPath = None, seqCap = 512, minSplit = 2, adaptive
     return outDf                
         
    
-path = "C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/corpus/0845Maqrizi.Mawaciz.MAB02082022-ara1.completed"
-outPath = "C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/MaqriziCorpus-ShinglingTests/256-adaptiveSplit.csv"
+# path = "C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/corpus/0845Maqrizi.Mawaciz.MAB02082022-ara1.completed"
+# outPath = "C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/MaqriziCorpus-ShinglingTests/256-adaptiveSplit.csv"
 
-inDir = "C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/corpus/MaqriziCorpus"
-path = []
-for root, dirs, files in os.walk(inDir, topdown=False):
-    for name in files:
-        path.append(os.path.join(root, name))
+# inDir = "C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/corpus/MaqriziCorpus"
+# path = []
+# for root, dirs, files in os.walk(inDir, topdown=False):
+#     for name in files:
+#         path.append(os.path.join(root, name))
 
-print(path)
+# print(path)
 
-out = InputFromText(path, outPath, seqCap=256, adaptiveSplit=True, shingle=True)
+# out = InputFromText(path, outPath, seqCap=256, adaptiveSplit=True, shingle=True)
     
                                
