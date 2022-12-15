@@ -21,38 +21,73 @@ def check_cuda(model):
 		cuda_device = -1
 	return model,cuda_device
 
+def csvToBERTopic(csvIn, csvOut, sentenceField = "text", returnDf = False, returnModel = False, seqLength = 512, 
+                  sortBy = ['t1', 't2', 't3', 't4'], embeddingModel = "aubmindlab/bert-base-arabertv02",
+                  topicLimit = None):
+    
+    # Load in input
+    df = pd.read_csv(csvIn).dropna()
+    
+    # Load embedding model
+    print("loading model...")
+    model_name = embeddingModel
+    max_seq_length= seqLength
+    word_embedding_model = models.Transformer(model_name, max_seq_length)
+    pooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension(),
+                                   pooling_mode_mean_tokens=True)
+    dense_model = models.Dense(in_features=pooling_model.get_sentence_embedding_dimension(), 
+                               out_features=seqLength, 
+                               activation_function=nn.Tanh())
+    model = SentenceTransformer(modules=[word_embedding_model, pooling_model, dense_model])
+    print("model loaded")
+    print("checking cuda...")
+    model, cuda = check_cuda(model)
+    print(cuda)
+    
+    # Take sentence column and pass to encoder
+    print("commencing embedding...")
+    sentences = df[sentenceField].tolist()
+    embeds = model.encode(sentences)
+    print("embeds created...")
+    
+    # Build topic model - if there is a cap on topics initiate topics using KMeans
+    if topicLimit:
+        print("Using a topicLimit of: " + str(topicLimit))
+        cluster_model = KMeans(n_clusters= topicLimit)
+        # REVIST - PASS IN CLUSTER MODEL
+        topic_model = BERTopic(language = 'multilingual')
+    
+    else:
+        topic_model = BERTopic(language='multilingual')
 
-df = pd.read_csv("C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/MaqriziCorpus-ShinglingTests/512-adaptiveSplit.csv").dropna()
+    print("clustering and topic model built")
 
-print("commencing embedding...")
-model_name = "aubmindlab/bert-base-arabertv02"
-max_seq_length=512
+    # fit_transform the model to the sentences and embeddings
+    df['Topic'], probabilities = topic_model.fit_transform(df[sentenceField], embeds)
+    
+    # Add the topic data to the dataframe
+    print("fit_transform complete... adding topic data to df")
+    
+    topic_info = topic_model.get_topic_info()
+    df = df.merge(topic_info, on='Topic', how='left')
+    df[["Topic", 't1', 't2', 't3', 't4']] = df["Name"].str.split("_", expand=True)
+    df = df.drop(columns=['Name'])
+    df = df.sort_values(by=['t1', 't2', 't3', 't4'])
 
-word_embedding_model = models.Transformer(model_name, max_seq_length)
-pooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension(),
-                               pooling_mode_mean_tokens=True)
-dense_model = models.Dense(in_features=pooling_model.get_sentence_embedding_dimension(), 
-                           out_features=512, 
-                           activation_function=nn.Tanh())
-model = SentenceTransformer(modules=[word_embedding_model, pooling_model, dense_model])
-model, cuda = check_cuda(model)
-print("model loaded")
-print(cuda)
-sentences = df["text"].tolist()
+    df.to_csv(csvOut, index=False, encoding='utf-8-sig')
+    
+    # If returnDf is true - return whole df, if returnModel is true, return the model if both are true return both
+    # This allows for function to be fed into following processes without reloading the outputs from storage into memory
+    if returnDf:
+        return df
+    if returnModel:
+        return topic_model
+    if returnDf and returnModel:
+        return df, topic_model
+    
 
-embeds = model.encode(sentences)
-print("embeds created...")
 
-main_tops = 300
-
-# Load and initialize BERTopic to use KMeans clustering with 8 clusters only.
-# cluster_model = KMeans(n_clusters= main_tops)
-topic_model = BERTopic(language='multilingual')
-print("clustering and topic model built")
-
-# df is a dataframe. df['title'] is the column of text we're modeling
-df['Topic'], probabilities = topic_model.fit_transform(df['text'], embeds)
-
+"""Below is earlier code for subtopic modelling - potentially add ability to pass this into function later """
 # # Add step to perform subtopic classification for larger sentence collections
 # sub_tops = 50
 
@@ -76,10 +111,3 @@ df['Topic'], probabilities = topic_model.fit_transform(df['text'], embeds)
 # # name clusters
 # df['topic_name'] = app.name_topics((df['phrase'], df['topic']))[0]
 
-topic_info = topic_model.get_topic_info()
-df = df.merge(topic_info, on='Topic', how='left')
-df[["Topic", 't1', 't2', 't3', 't4']] = df["Name"].str.split("_", expand=True)
-df = df.drop(columns=['Name'])
-df = df.sort_values(by=['t1', 't2', 't3', 't4'])
-
-df.to_csv("C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/MaqriziCorpus-ShinglingTests/512-adaptiveSplit-Topics.csv", index=False, encoding='utf-8-sig')
