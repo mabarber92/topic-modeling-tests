@@ -5,6 +5,8 @@ from torch import nn
 import os
 from mainFuncs.BERTopic_model import csvToBERTopic
 from mainFuncs.createModelOnline import createModelOnline
+from torch import cuda
+
 
 def modelCorpus(inDir, outDir, inputType="csvs", seqLength=512, embeddingModel = "aubmindlab/bert-base-arabertv02", shingle=False, modelSummary = None):
     
@@ -19,7 +21,9 @@ def modelCorpus(inDir, outDir, inputType="csvs", seqLength=512, embeddingModel =
                                out_features=seqLength, 
                                activation_function=nn.Tanh())
     transformerModel = SentenceTransformer(modules=[word_embedding_model, pooling_model, dense_model])
-    transformerModel, cuda = check_cuda(transformerModel)
+    device = "cuda:0" if cuda.is_available() else "cpu"
+    print(device)
+    transformerModel = SentenceTransformer(modules=[word_embedding_model, pooling_model, dense_model], device = device)
     print("model loaded")
     
     # creatModelOnline will partial_fit() the model by iterating through the corpus and will create the csvs to provide outputs

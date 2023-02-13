@@ -7,6 +7,43 @@ Created on Tue Dec  6 14:19:12 2022
 
 import pandas as pd
 from tqdm import tqdm
+pd.options.mode.chained_assignment = None
+
+def summariseCol(df, col, col2):
+    colList = df[col].drop_duplicates().to_list()
+    df[col+"Count"] = len(colList)
+    if col2:
+        col2List = df[col2].drop_duplicates().to_list()
+        df[col2 + "Count"] = len(col2List)
+        combName = col + "-" + col2
+        df[combName] = df[col].astype(str) + "." + df[col2].astype(str)
+        df[combName + "Count"] = df[combName].map(df[combName].value_counts())
+        df = df.drop(columns=[combName])
+    
+    return df    
+    
+
+def performColSummary(df, col, mainFilter=None, col2 = None, returnSummary=False):
+    if mainFilter:
+        filterVals = df[mainFilter].drop_duplicates().to_list()
+        print(filterVals)
+        outDf = pd.DataFrame()
+        for val in filterVals:
+            filteredDf = df[df[mainFilter] == val]
+            filteredDf = summariseCol(filteredDf, col, col2)
+            outDf = pd.concat([outDf, filteredDf])
+    else:
+        outDf = summariseCol(df, col, col2)
+    if mainFilter and returnSummary:
+        if col2:
+            summaryDf = outDf[[mainFilter, col +  "Count", col2 + "Count"]].drop_duplicates()
+        else:
+            summaryDf = outDf[[mainFilter, col +  "Count", col2 + "Count"]].drop_duplicates()
+        return outDf, summaryDf
+    else:
+        return outDf
+    
+
 
 def performSummary(filteredDf, topic, summaryOnly=False, addData = ["Count", "t1", "t2", "t3", "t4"]):
     bookDictList = []

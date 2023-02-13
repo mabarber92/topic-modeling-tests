@@ -1,5 +1,5 @@
-from InputFromText import InputFromText
-from BERTopic_model import csvToBERTopic
+from mainFuncs.InputFromText import InputFromText
+from mainFuncs.BERTopic_model import csvToBERTopic
 import pandas as pd
 import os
 from tqdm import tqdm
