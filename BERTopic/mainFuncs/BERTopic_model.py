@@ -10,12 +10,13 @@ from bertopic import BERTopic
 from sklearn.cluster import KMeans
 from tqdm import tqdm
 from umap import UMAP
-from addSummaryCounts import performColSummary
-from initialiseEmbedModel import initialiseEmbedModel
+from mainFuncs.addSummaryCounts import performColSummary
+from mainFuncs.initialiseEmbedModel import initialiseEmbedModel
 
 def csvToBERTopic(csvIn, csvOut=None, inputType = "csv", sentenceField = "text", transformer=None, existingModel = None, returnDf = False, returnModel = False, seqLength = 512, 
                   sortBy = ['t1', 't2', 't3', 't4'], embeddingModel = "aubmindlab/bert-base-arabertv02",
-                  topicLimit = None, returnSummary=None, reduceOutliers=None, seed=None, calculateProbabilities = False, existingEmbeds = None, n_neighbors=15, colSummary = None):
+                  topicLimit = None, returnSummary=None, reduceOutliers=None, seed=None, calculateProbabilities = False, existingEmbeds = None, n_neighbors=15, colSummary = None,
+                  returnSummaryCsv = None):
     """reduceOutliers is populated as a dictionary e.g. {"strategy": "c-tf-idf", "thres": 0.1} or {"strategy": "probabilities", "thres": 0.2}
     colSummary should be formatted as list of dicts for each col or pairs of col to summarise on: e.g. [{"col1": "ms", "col2": "uri"}]"""
     # Load in input
@@ -101,6 +102,11 @@ def csvToBERTopic(csvIn, csvOut=None, inputType = "csv", sentenceField = "text",
                 df, colSummaryDf = performColSummary(df, sumCrit["col1"], mainFilter="Topic", col2 = sumCrit["col2"], returnSummary=True)
             elif "col1" in sumCrit.keys():
                 df, colSummaryDf = performColSummary(df, sumCrit["col1"], mainFilter="Topic", returnSummary=True)
+
+        print(colSummaryDf)
+        print(type(colSummaryDf["Topic"].to_list()[0]))
+        colSummaryDf["Topic"] = colSummaryDf["Topic"].astype('int32')
+        print(type(colSummaryDf["Topic"].to_list()[0]))
     
     # If a summary data frame is needed, create it
     if returnSummary:
@@ -118,13 +124,14 @@ def csvToBERTopic(csvIn, csvOut=None, inputType = "csv", sentenceField = "text",
         summaryDf = pd.DataFrame(topicLabels, columns=["label"])
         summaryDf[summaryHeading] = summaryDf["label"].str.split("_", expand=True)
         summaryDf = summaryDf.drop(columns=['label'])
-        summaryDf["Topic"] = summaryDf["Topic"].astype(int)
+        summaryDf["Topic"] = summaryDf["Topic"].astype('int32')
         print(summaryDf)   
         summaryDf = summaryDf.merge(summaryDfCounts, on='Topic', how='left')
 
         if colSummary:
             summaryDf = summaryDf.merge(colSummaryDf, on="Topic", how='left')
-    
+        if returnSummaryCsv:
+            summaryDf.to_csv(returnSummaryCsv, index=False, encoding='utf-8-sig')
     if csvOut:    
         df.to_csv(csvOut, index=False, encoding='utf-8-sig')
     
