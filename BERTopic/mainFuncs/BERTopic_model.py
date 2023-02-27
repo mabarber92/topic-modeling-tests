@@ -12,6 +12,7 @@ from tqdm import tqdm
 from umap import UMAP
 from mainFuncs.addSummaryCounts import performColSummary
 from mainFuncs.initialiseEmbedModel import initialiseEmbedModel
+from numpy import random
 
 def csvToBERTopic(csvIn, csvOut=None, inputType = "csv", sentenceField = "text", transformer=None, existingModel = None, returnDf = False, returnModel = False, seqLength = 512, 
                   sortBy = ['t1', 't2', 't3', 't4'], embeddingModel = "aubmindlab/bert-base-arabertv02",
@@ -19,6 +20,9 @@ def csvToBERTopic(csvIn, csvOut=None, inputType = "csv", sentenceField = "text",
                   returnSummaryCsv = None):
     """reduceOutliers is populated as a dictionary e.g. {"strategy": "c-tf-idf", "thres": 0.1} or {"strategy": "probabilities", "thres": 0.2}
     colSummary should be formatted as list of dicts for each col or pairs of col to summarise on: e.g. [{"col1": "ms", "col2": "uri"}]"""
+    if seed:
+        seed = random.RandomState(seed=seed)
+        print(seed)
     # Load in input
     if inputType == "csv":
         df = pd.read_csv(csvIn).dropna()
@@ -50,18 +54,22 @@ def csvToBERTopic(csvIn, csvOut=None, inputType = "csv", sentenceField = "text",
     # If an existing topic model has been passed, transform the new sentences and embeddings without initialising a new model
     if not existingModel:
         print("Creating new model and fitting and transforming")
-        umap_model = UMAP(n_neighbors=n_neighbors, n_components=5, min_dist=0.0, metric='cosine', random_state=seed)
+        umapModel = UMAP(n_neighbors=n_neighbors, n_components=5, min_dist=0.0, metric='cosine', random_state=seed)
         if topicLimit:
             print("Using a topicLimit of: " + str(topicLimit))
             cluster_model = KMeans(n_clusters= topicLimit)
             # REVIST - PASS IN CLUSTER MODEL
-            topic_model = BERTopic(calculate_probabilities=calculateProbabilities, language = 'multilingual',umap_model=umap_model)
+            topic_model = BERTopic(calculate_probabilities=calculateProbabilities, language = 'multilingual',umap_model=umapModel)
         
         
         else:
-            topic_model = BERTopic(calculate_probabilities=calculateProbabilities, language='multilingual', umap_model=umap_model)
-        
+            print("Creating topic model without limit")
+            topic_model = BERTopic(calculate_probabilities=calculateProbabilities, language='multilingual', umap_model=umapModel)
+            print(topic_model.umap_model)
         df['Topic'], probabilities = topic_model.fit_transform(df[sentenceField], embeds)
+        
+
+
     else:
         print("Transforming using existing model")
         topic_model = existingModel
