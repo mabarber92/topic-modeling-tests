@@ -15,9 +15,9 @@ from mainFuncs.initialiseEmbedModel import initialiseEmbedModel
 from numpy import random
 
 def csvToBERTopic(csvIn, csvOut=None, inputType = "csv", sentenceField = "text", transformer=None, existingModel = None, returnDf = False, returnModel = False, seqLength = 512, 
-                  sortBy = ['t1', 't2', 't3', 't4'], embeddingModel = "aubmindlab/bert-base-arabertv02",
+                  sortBy = ['t1', 't2', 't3', 't4'], embeddingModel = "CAMeL-Lab/bert-base-arabic-camelbert-ca",
                   topicLimit = None, returnSummary=None, reduceOutliers=None, seed=None, calculateProbabilities = False, existingEmbeds = None, n_neighbors=15, colSummary = None,
-                  returnSummaryCsv = None):
+                  returnSummaryCsv = None, min_topic_size = 10):
     """reduceOutliers is populated as a dictionary e.g. {"strategy": "c-tf-idf", "thres": 0.1} or {"strategy": "probabilities", "thres": 0.2}
     colSummary should be formatted as list of dicts for each col or pairs of col to summarise on: e.g. [{"col1": "ms", "col2": "uri"}]"""
     if seed:
@@ -59,12 +59,12 @@ def csvToBERTopic(csvIn, csvOut=None, inputType = "csv", sentenceField = "text",
             print("Using a topicLimit of: " + str(topicLimit))
             cluster_model = KMeans(n_clusters= topicLimit)
             # REVIST - PASS IN CLUSTER MODEL
-            topic_model = BERTopic(calculate_probabilities=calculateProbabilities, language = 'multilingual',umap_model=umapModel)
+            topic_model = BERTopic(calculate_probabilities=calculateProbabilities, language = 'multilingual',umap_model=umapModel, min_topic_size = min_topic_size)
         
         
         else:
             print("Creating topic model without limit")
-            topic_model = BERTopic(calculate_probabilities=calculateProbabilities, language='multilingual', umap_model=umapModel)
+            topic_model = BERTopic(calculate_probabilities=calculateProbabilities, language='multilingual', umap_model=umapModel, min_topic_size = min_topic_size)
             print(topic_model.umap_model)
         df['Topic'], probabilities = topic_model.fit_transform(df[sentenceField], embeds)
         
@@ -80,6 +80,7 @@ def csvToBERTopic(csvIn, csvOut=None, inputType = "csv", sentenceField = "text",
     
     # If an outlier reduction method is being adopted then apply it according to set parameters and merge the updated topic info
     # Otherise merge the topic info without updating it
+    # !! Replace this with the specific reduceOutliers function !!
     if reduceOutliers:
         print("reducing outliers")
         print(reduceOutliers)
