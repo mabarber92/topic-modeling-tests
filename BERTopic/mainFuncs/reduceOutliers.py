@@ -31,8 +31,9 @@ def reduceOutliers(topicModel, dataIn, threshold, csvOut = None, sentenceField= 
         print("Dropping old topic assignment")
         df = df.drop(columns = ["TopicOld"])
         df = df.drop(columns = ["CountOld"])
-        df = df.rename(columns = {"TopicNew": "Topic"})
-        df = df.rename(columns = {"CountNew": "Count"})
+        
+    df = df.rename(columns = {"TopicNew": "Topic"})
+    df = df.rename(columns = {"CountNew": "Count"})
         
     
     if csvOut:
