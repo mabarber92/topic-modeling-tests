@@ -1,7 +1,8 @@
 from bertopic import BERTopic
 import pandas as pd
+from mainFuncs.addSummaryCounts import performColSummary
 
-def reduceOutliers(topicModel, dataIn, threshold, csvOut = None, sentenceField= "phrase", modelAsPath = False, csvIn = False, compareOld = False):
+def reduceOutliers(topicModel, dataIn, threshold, csvOut = None, sentenceField= "phrase", modelAsPath = False, csvIn = False, compareOld = False, colSummary=[{"col1": "ms", "col2":"uri"}]):
     # Load model
     if modelAsPath:
         topic_model = BERTopic.load(topicModel)
@@ -35,8 +36,19 @@ def reduceOutliers(topicModel, dataIn, threshold, csvOut = None, sentenceField= 
     df = df.rename(columns = {"TopicNew": "Topic"})
     df = df.rename(columns = {"CountNew": "Count"})
         
-    
+    # If there are columns specified for summarisation - summarise on them
+    if colSummary:
+        print("Summarising columns on {}".format(str(colSummary)))
+        for sumCrit in colSummary:            
+            if "col1" in sumCrit.keys() and "col2" in sumCrit.keys():
+                df, colSummaryDf = performColSummary(df, sumCrit["col1"], mainFilter="Topic", col2 = sumCrit["col2"], returnSummary=True)
+            elif "col1" in sumCrit.keys():
+                df, colSummaryDf = performColSummary(df, sumCrit["col1"], mainFilter="Topic", returnSummary=True)
+
+        
+        colSummaryDf["Topic"] = colSummaryDf["Topic"].astype('int32')
+
     if csvOut:
         df.to_csv(csvOut, index=False, encoding='utf-8-sig')
-
+ 
     return df
