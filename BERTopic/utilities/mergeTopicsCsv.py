@@ -2,6 +2,7 @@ import pandas as pd
 import sys
 
 def mergeTopicsCsv(primaryCsv, secondaryCsv, csvOut, idCols, sentenceCol="phrase"):
+    """WARNING - THIS MERGER PRODUCES DUPLICATE ENTRIES - A FIX IS NEEDED"""
     print(idCols)
     # Depending on whether list is given create the list that will be used to select columns for the merge 
     if not type(idCols) == list:
