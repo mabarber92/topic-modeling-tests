@@ -6,11 +6,31 @@ import re
 
 
 class getTags():
-    def __init__ (self, input, col = "tags", input_df = False):
-        if input_df:
-            self.meta_df = input
-        else:
-            self.meta_df = pd.read_csv(meta_csv, sep="\t")
+    def __init__ (self, input, col = "tags", input_df = False, use_pri = False, use_all_versions=False):
+        if not input_df:
+            input = pd.read_csv(meta_csv, sep="\t")
+        if use_pri:
+            input = input[input["status"] == "pri"]
+        elif use_all_versions:
+            book_list = input["book"].drop_duplicates().tolist()
+            filtered_meta_dicts = []
+            for book in book_list:                
+                versions_df = input[input["book"] == book]
+                all_tags = versions_df["tags"].drop_duplicates().dropna().tolist()
+                # If all versions return nan in their tags field, then we give them 'None' in new df
+                if len(all_tags) > 0:
+                    all_tags = " :: ".join(all_tags)
+                else:
+                    all_tags = 'None'    
+                filtered_meta_dicts.append({"book": book, "tags" : all_tags})
+            filtered_df = pd.DataFrame(filtered_meta_dicts)
+            # Merge in new tag categories
+            input = input.drop(columns=["tags"])
+            input = input.merge(filtered_df, on="book", how="left")
+            input = input[input["status"] == "pri"]
+        self.meta_df = input
+    
+            
         self.fetch_col(col)
     def fetch_col(self, col="tags"):
         self.col_series = self.meta_df[col]
@@ -22,21 +42,32 @@ class getTags():
         df = pd.DataFrame()
         df[col_name] = list(dict.fromkeys(self.list_of_all_tags()))
         return df.sort_values(by = col_name)
-    def count_tags(self, col_name="unique_tags"):
+    def count_tags(self, col_name="unique_tags", texts_list = False):
         df = pd.DataFrame()
         df[col_name] = self.list_of_all_tags()
         df = df.value_counts().rename_axis(col_name).reset_index(name='counts')
+        if texts_list:
+            df = self.text_list_per_topic(df, col_name)
         return df
     def list_of_all_tags(self):
         final_list = []
         list_of_rows = self.col_series.dropna().tolist()
         for row in list_of_rows:            
             tag_list = re.split("\s*::\s+", row)
+            # Check there are no duplicated tags in the input row (imp if we're using all_versions as input)
+            tag_list = list(set(tag_list))
             final_list.extend(tag_list)
         if "" in final_list:
             print("Space found")
             final_list = [i for i in final_list if i != " "]
         return final_list
+    def text_list_per_topic(self, df, col_name):
+        df_dict = df.to_dict("records")
+        for row in df_dict:
+            tag_match = self.meta_df[self.meta_df["tags"].str.contains(row[col_name])]["book"].to_list()
+            row["uris"] = tag_match
+        return pd.DataFrame(df_dict)
+
     # For future - set up class so obj can be filtered like it is a dataframe
 
 class uriTopicMetadata():
@@ -44,6 +75,7 @@ class uriTopicMetadata():
 
     def __init__(self, meta_csv, topic_csv, topic_filter = [], graphing_par = "uri-ms"):
         meta_df = pd.read_csv(meta_csv, sep="\t")
+        self.meta_df_full = meta_df.copy()
         self.meta_df = meta_df[meta_df["status"] == "pri"]
         self.meta_df["ms-total"] = self.meta_df["tok_length"]/300
         self.topic_uri_df = pd.read_csv(topic_csv)[["Topic", "uri", "ms"]].drop_duplicates()
@@ -56,11 +88,20 @@ class uriTopicMetadata():
         self.graphing_par = graphing_par
         self.tags = None
 
-    def merge_meta(self, left):
-        left["uri"] = left["uri"].str.split("\.").str[:3].str.join(".")
-        df = left.merge(self.meta_df, left_on="uri", right_on="version_uri", how="left")
-        df.drop(columns = ["version_uri"])
+    def merge_meta(self, left, on = "uri"):
+        if on == "uri":
+            left["uri"] = left["uri"].str.split("\.").str[:3].str.join(".")
+            df = left.merge(self.meta_df, left_on="uri", right_on="version_uri", how="left")
+            df.drop(columns = ["version_uri"])
+        elif on == "book":
+            left["book"] = left["uri"].str.split("\.").str[:2].str.join(".")
+            df = left.merge(self.meta_df, on ="book", how="left")
         return df
+
+    # Function to return all metadata entries for a set book (all versions)
+    def filter_meta_on_book(self, filter_df):
+        book_list = filter_df["book"].drop_duplicates().to_list()
+        return self.meta_df_full[self.meta_df_full["book"].isin(book_list)]
 
     # Function for filtering topics
     def filter_topics(self, topic_list):
@@ -95,6 +136,15 @@ class uriTopicMetadata():
         
         return df_out.sort_values(by = column_head, ascending=False)
     
+    # Get tags associated with the topic list and return dataframe counting the tags - use either the pri or the longest tag field for the calculation
+    def get_and_count_tags(self, use_pri = True):
+        if use_pri:
+            return getTags(topic_meta.topic_uri_df[["uri", "tags"]].drop_duplicates(), input_df=True).count_tags(texts_list = True)
+        else:
+            book_metadata = self.filter_meta_on_book(self.topic_uri_df).drop_duplicates()
+            all_tags = getTags(book_metadata, input_df=True, use_all_versions=True)
+            return all_tags.count_tags(texts_list=True)
+
     # Fetch data according to list of values
     def fetch_data_by_list(self, val_list, field="date", csv_out = None):
         if field == "tags":
@@ -375,9 +425,9 @@ if __name__ == "__main__":
         {"graph_path": "Yusuf-Hadith-comp-uri+hadith-authors.png", "comp_meta_tags": ["_HADITH", "GAL@hadith"], "graphing_par": "author_from_uri", "title-word": "Hadith"},
          {"graph_path": "Yusuf-Hadith-sentence-counts.png", "comp_meta_tags": None, "graphing_par": None, "title-word": ""}]
     
-    data_path = "C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/data/outputs/searchModelling/results-camelbert-seed10-run2-outliers4-msfixed.csv"
+    data_path = "E:/topicModelling/data/outputs/searchModelling/results-camelbert-seed10-run2-outliers4.csv"
 
-    meta_path = "D:/Corpus Stats/2022/OpenITI_metadata_2022-1-6_merged.csv"
+    meta_path = "E:/Corpus Stats/2022/OpenITI_metadata_2022-1-6_merged.csv"
 
     topic_focus = "C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/tasks/output/Yusuf-famine-hadith.csv"
 
@@ -389,7 +439,7 @@ if __name__ == "__main__":
 
     topic_meta = uriTopicMetadata(meta_path, data_path, topic_filter = topic_list)
 
-    print(topic_meta.topic_uri_df[topic_meta.topic_uri_df["book"] == "0845Maqrizi.ImtacAsmac"])
+  
     # Test poisson
     # poisson_df, g = topic_meta.calculate_poisson(image_path="tok-count-poisson.png")
     # poisson_df.to_csv("tok_count_poisson.csv")
@@ -403,8 +453,8 @@ if __name__ == "__main__":
     #     produce_graphs(graph["graph_path"], topic_meta_obj = topic_meta, comp_meta_tags = graph["comp_meta_tags"], graphing_par = graph["graphing_par"], comp_title_word=graph["title-word"])
 
     # Produce summary sets
-    # topic_tags = getTags(topic_meta.topic_uri_df[["uri", "tags"]].drop_duplicates(), input_df=True)
-    # topic_tags.count_tags().to_csv("Yusuf-hadith-top-tags.csv", encoding = 'utf-8-sig')
+    topic_tags = topic_meta.get_and_count_tags(use_pri=False)
+    topic_tags.to_csv("Yusuf-hadith-top-tags.csv", encoding = 'utf-8-sig')
 
     # topic_meta.count_per_field(field="author_from_uri").to_csv("Yusuf-hadith-ms-count-author.csv")
     # topic_meta.count_per_field(field="author_from_uri", on_ms=False).to_csv("Yusuf-hadith-count-author.csv")
