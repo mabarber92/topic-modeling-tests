@@ -18,9 +18,11 @@ class getTags():
                 versions_df = input[input["book"] == book]
                 all_tags = versions_df["tags"].drop_duplicates().dropna().tolist()
                 # If all versions return nan in their tags field, then we give them 'None' in new df
+                all_tags = [x for x in all_tags if x != "" or x != " "] 
                 if len(all_tags) > 0:
                     all_tags = " :: ".join(all_tags)
                 else:
+                    print("No tags found")
                     all_tags = 'None'    
                 filtered_meta_dicts.append({"book": book, "tags" : all_tags})
             filtered_df = pd.DataFrame(filtered_meta_dicts)
