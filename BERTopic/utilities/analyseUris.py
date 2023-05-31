@@ -49,6 +49,7 @@ class getTags():
         df[col_name] = self.list_of_all_tags()
         df = df.value_counts().rename_axis(col_name).reset_index(name='counts')
         if texts_list:
+            
             df = self.text_list_per_topic(df, col_name)
         return df
     def list_of_all_tags(self):
@@ -66,6 +67,9 @@ class getTags():
     def text_list_per_topic(self, df, col_name):
         df_dict = df.to_dict("records")
         for row in df_dict:
+            # Note - because we are using pandas in-built without a regex, it will also retrieve tags that 
+            # contain the whole string (e.g. that start with the query string). Using match in place of 
+            # contains will not resolve this. !!CONSIDER FIX!!
             tag_match = self.meta_df[self.meta_df["tags"].str.contains(row[col_name])]["book"].to_list()
             row["uris"] = tag_match
         return pd.DataFrame(df_dict)
@@ -419,27 +423,39 @@ def produce_graphs(graph_png_path, topic_filter = [], comp_meta_tags = None, gra
     
     return fig
 
+def count_unique_books_in_tags_df(csv):
+    """Take a csv with unique tags and book lists (of kind outputted when running
+    tag counts and count unique books) - for calculating counts on hand-filtered tag lists
+    made from the original files"""
+    df = pd.read_csv(csv, converters={"uris": lambda x: x.strip("[]")})
+    unique_books = list(set([b for bl in df["uris"].to_list() for b in re.split(", '|'|,'", bl)]))
+    unique_books.remove('')
+    print(unique_books)
+    print("{} Unique books in {}".format(len(unique_books), csv))
+
+
 if __name__ == "__main__":
     
-    graphing_sets = [
-        {"graph_path": "Yusuf-Hadith-comp-ms-uri+hadith-uris.png", "comp_meta_tags": ["_HADITH", "GAL@hadith"], "graphing_par": "uri-ms", "title-word": "Hadith"}, 
-        {"graph_path": "Yusuf-Hadith-comp-uri+hadith-uris.png", "comp_meta_tags": ["_HADITH", "GAL@hadith"], "graphing_par": "uri", "title-word": "Hadith"},
-        {"graph_path": "Yusuf-Hadith-comp-uri+hadith-authors.png", "comp_meta_tags": ["_HADITH", "GAL@hadith"], "graphing_par": "author_from_uri", "title-word": "Hadith"},
-         {"graph_path": "Yusuf-Hadith-sentence-counts.png", "comp_meta_tags": None, "graphing_par": None, "title-word": ""}]
+    count_unique_books_in_tags_df("C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/tasks/output/Yusuf-hadith-history-tags.csv")
+    # graphing_sets = [
+    #     {"graph_path": "Yusuf-Hadith-comp-ms-uri+hadith-uris.png", "comp_meta_tags": ["_HADITH", "GAL@hadith"], "graphing_par": "uri-ms", "title-word": "Hadith"}, 
+    #     {"graph_path": "Yusuf-Hadith-comp-uri+hadith-uris.png", "comp_meta_tags": ["_HADITH", "GAL@hadith"], "graphing_par": "uri", "title-word": "Hadith"},
+    #     {"graph_path": "Yusuf-Hadith-comp-uri+hadith-authors.png", "comp_meta_tags": ["_HADITH", "GAL@hadith"], "graphing_par": "author_from_uri", "title-word": "Hadith"},
+    #      {"graph_path": "Yusuf-Hadith-sentence-counts.png", "comp_meta_tags": None, "graphing_par": None, "title-word": ""}]
     
-    data_path = "E:/topicModelling/data/outputs/searchModelling/results-camelbert-seed10-run2-outliers4.csv"
+    # data_path = "E:/topicModelling/data/outputs/searchModelling/results-camelbert-seed10-run2-outliers4.csv"
 
-    meta_path = "E:/Corpus Stats/2022/OpenITI_metadata_2022-1-6_merged.csv"
+    # meta_path = "E:/Corpus Stats/2022/OpenITI_metadata_2022-1-6_merged.csv"
 
-    topic_focus = "C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/tasks/output/Yusuf-famine-hadith.csv"
+    # topic_focus = "C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/tasks/output/Yusuf-famine-hadith.csv"
 
-    topic_list = pd.read_csv(topic_focus)["Topic"].tolist()
-    if "Total" in topic_list:
-        topic_list.remove("Total")
-    topic_list = [int(t) for t in topic_list]
-    print(topic_list)
+    # topic_list = pd.read_csv(topic_focus)["Topic"].tolist()
+    # if "Total" in topic_list:
+    #     topic_list.remove("Total")
+    # topic_list = [int(t) for t in topic_list]
+    # print(topic_list)
 
-    topic_meta = uriTopicMetadata(meta_path, data_path, topic_filter = topic_list)
+    # topic_meta = uriTopicMetadata(meta_path, data_path, topic_filter = topic_list)
 
   
     # Test poisson
@@ -455,8 +471,8 @@ if __name__ == "__main__":
     #     produce_graphs(graph["graph_path"], topic_meta_obj = topic_meta, comp_meta_tags = graph["comp_meta_tags"], graphing_par = graph["graphing_par"], comp_title_word=graph["title-word"])
 
     # Produce summary sets
-    topic_tags = topic_meta.get_and_count_tags(use_pri=False)
-    topic_tags.to_csv("Yusuf-hadith-top-tags.csv", encoding = 'utf-8-sig')
+    # topic_tags = topic_meta.get_and_count_tags(use_pri=False)
+    # topic_tags.to_csv("Yusuf-hadith-top-tags.csv", encoding = 'utf-8-sig')
 
     # topic_meta.count_per_field(field="author_from_uri").to_csv("Yusuf-hadith-ms-count-author.csv")
     # topic_meta.count_per_field(field="author_from_uri", on_ms=False).to_csv("Yusuf-hadith-count-author.csv")

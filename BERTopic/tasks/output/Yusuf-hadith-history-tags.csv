@@ -1,0 +1,23 @@
+,unique_tags,counts,uris
+52,GAL@historiography,23,"['0230IbnSacd.TabaqatKubra', '0235IbnAbiShayba.Musannaf', '0235IbnAbiShayba.Musnad', '0279Baladhuri.AnsabAshraf', '0310Tabari.JamicBayan', '0400IbnTahirMaqdisi.BadWaTarikh', '0427AbuIshaqThaclabi.KashfWaBayan', '0488IbnFutuhHumaydi.JamcBaynaSahihayn', '0509IbnShahridarDaylami.Firdaws', '0535QawwamSunna.SiyarSalaf', '0571IbnCasakir.MucjamShuyukh', '0571IbnCasakir.TarikhDimashq', '0685IbnSacidMaghribi.NashwatTarab', '0748Dhahabi.SiyarAclamNubala', '0748Dhahabi.TarikhIslam', '0774IbnKathir.Bidaya', '0774IbnKathir.TafsirQuran', '0845Maqrizi.ImtacAsmac', '0852IbnHajarCasqalani.ImtacBiArbacin', '0852IbnHajarCasqalani.TaghliqTacliq', '0855BadrDinCayni.CumdatQari', '0855BadrDinCayni.SharhSunanAbiDawud', '0902Sakhawi.SirrMaktum']"
+51,GAL@history,23,"['0230IbnSacd.TabaqatKubra', '0235IbnAbiShayba.Musannaf', '0235IbnAbiShayba.Musnad', '0279Baladhuri.AnsabAshraf', '0310Tabari.JamicBayan', '0400IbnTahirMaqdisi.BadWaTarikh', '0427AbuIshaqThaclabi.KashfWaBayan', '0488IbnFutuhHumaydi.JamcBaynaSahihayn', '0509IbnShahridarDaylami.Firdaws', '0535QawwamSunna.SiyarSalaf', '0571IbnCasakir.MucjamShuyukh', '0571IbnCasakir.TarikhDimashq', '0685IbnSacidMaghribi.NashwatTarab', '0748Dhahabi.SiyarAclamNubala', '0748Dhahabi.TarikhIslam', '0774IbnKathir.Bidaya', '0774IbnKathir.TafsirQuran', '0845Maqrizi.ImtacAsmac', '0852IbnHajarCasqalani.ImtacBiArbacin', '0852IbnHajarCasqalani.TaghliqTacliq', '0855BadrDinCayni.CumdatQari', '0855BadrDinCayni.SharhSunanAbiDawud', '0902Sakhawi.SirrMaktum']"
+94,_TARIKH,11,"['0228IbnHammadKhuzaci.Fitan', '0279Baladhuri.AnsabAshraf', '0400IbnTahirMaqdisi.BadWaTarikh', '0571IbnCasakir.TarikhDimashq', '0600AbuBaqaHilli.ManaqibMazyadiyya', '0685IbnSacidMaghribi.NashwatTarab', '0711IbnManzurIfriqi.MukhtasarTarikhDimashq', '0748Dhahabi.SiyarAclamNubala', '0748Dhahabi.TarikhIslam', '0774IbnKathir.Bidaya', '0845Maqrizi.ImtacAsmac']"
+130,GAL@history-universal,8,"['0748Dhahabi.SiyarAclamNubala', '0748Dhahabi.TarikhIslam', '0774IbnKathir.Bidaya', '0774IbnKathir.TafsirQuran', '0852IbnHajarCasqalani.ImtacBiArbacin', '0852IbnHajarCasqalani.TaghliqTacliq', '0855BadrDinCayni.CumdatQari', '0855BadrDinCayni.SharhSunanAbiDawud']"
+162,GAL@history-world,6,"['0235IbnAbiShayba.Musannaf', '0235IbnAbiShayba.Musnad', '0279Baladhuri.AnsabAshraf', '0310Tabari.JamicBayan', '0400IbnTahirMaqdisi.BadWaTarikh', '0509IbnShahridarDaylami.Firdaws']"
+181,GAL@history-imperial,5,"['0235IbnAbiShayba.Musannaf', '0235IbnAbiShayba.Musnad', '0279Baladhuri.AnsabAshraf', '0310Tabari.JamicBayan', '0400IbnTahirMaqdisi.BadWaTarikh']"
+180,GAL@history-local,5,"['0488IbnFutuhHumaydi.JamcBaynaSahihayn', '0571IbnCasakir.MucjamShuyukh', '0571IbnCasakir.TarikhDimashq', '0685IbnSacidMaghribi.NashwatTarab', '0845Maqrizi.ImtacAsmac']"
+204,JK@??? ???????,5,"['0279Baladhuri.AnsabAshraf', '0400IbnTahirMaqdisi.BadWaTarikh', '0748Dhahabi.SiyarAclamNubala', '0748Dhahabi.TarikhIslam', '0774IbnKathir.Bidaya']"
+207,Shamela@???????,5,"['0400IbnTahirMaqdisi.BadWaTarikh', '0600AbuBaqaHilli.ManaqibMazyadiyya', '0685IbnSacidMaghribi.NashwatTarab', '0748Dhahabi.TarikhIslam', '0774IbnKathir.Bidaya']"
+223,Shia@????? ???????,4,"['0228IbnHammadKhuzaci.Fitan', '0748Dhahabi.TarikhIslam', '0774IbnKathir.Bidaya', '0845Maqrizi.ImtacAsmac']"
+285,JK@???????? ??????,3,"['0400IbnTahirMaqdisi.BadWaTarikh', '0748Dhahabi.TarikhIslam', '0774IbnKathir.Bidaya']"
+317,Sham@???????,3,"['0711IbnManzurIfriqi.MukhtasarTarikhDimashq', '0748Dhahabi.TarikhIslam', '0774IbnKathir.Bidaya']"
+324,JK@??????? ?????,2,"['0400IbnTahirMaqdisi.BadWaTarikh', '0774IbnKathir.Bidaya']"
+429,JK@??? ??????? ?????????,2,"['0600AbuBaqaHilli.ManaqibMazyadiyya', '0711IbnManzurIfriqi.MukhtasarTarikhDimashq']"
+447,Sham@???????? ??????,2,"['0748Dhahabi.TarikhIslam', '0774IbnKathir.Bidaya']"
+441,Sham@??? ???????,2,"['0748Dhahabi.TarikhIslam', '0774IbnKathir.Bidaya']"
+463,GAL@history-caliphs,1,['0509IbnShahridarDaylami.Firdaws']
+459,GAL@history-individuals,1,['0535QawwamSunna.SiyarSalaf']
+483,GAL@history-muhammad,1,['0230IbnSacd.TabaqatKubra']
+504,GAL@history-national,1,['0845Maqrizi.ImtacAsmac']
+502,GAL@history-prophets,1,['0427AbuIshaqThaclabi.KashfWaBayan']
+610,JK@????? ????????,1,['0535QawwamSunna.DalailNubuwwa']
