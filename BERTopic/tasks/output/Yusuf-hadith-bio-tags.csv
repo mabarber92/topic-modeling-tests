@@ -1,0 +1,20 @@
+﻿,unique_tags,counts,uris
+656,_ANSAB,1,['0279Baladhuri.AnsabAshraf']
+661,_WAFAYAT,1,['0748Dhahabi.SiyarAclamNubala']
+543,GAL@biography,1,"['0734IbnSayyidNas.CuyunAthar', '0902Sakhawi.SirrMaktum', '0923AhmadQastallani.IrshadSari', '0923AhmadQastallani.MawahibLaduniyya']"
+554,GAL@biography-collective,1,['0902Sakhawi.SirrMaktum']
+671,GEN,1,['0279Baladhuri.AnsabAshraf']
+603,JK@الطبقات والوفيات,1,['0748Dhahabi.SiyarAclamNubala']
+476,Sham@التراجم العامة,1,['0711IbnManzurIfriqi.MukhtasarTarikhDimashq']
+499,Sham@الطبقات والوفيات,1,['0748Dhahabi.SiyarAclamNubala']
+553,Sham@تراجم رجال الحديث,1,['0571IbnCasakir.TarikhDimashq']
+539,ShamAY@التراجم والطبقات - مرقم آليا,1,['0230IbnSacd.TabaqatKubra']
+560,Shamela@الأنساب,1,['0279Baladhuri.AnsabAshraf']
+360,JK@الطبقات والتراجم,2,"['0230IbnSacd.TabaqatKubra', '0748Dhahabi.SiyarAclamNubala']"
+429,JK@كتب التراجم التاريخية,2,"['0600AbuBaqaHilli.ManaqibMazyadiyya', '0711IbnManzurIfriqi.MukhtasarTarikhDimashq']"
+341,ShamAY@التراجم والطبقات,2,"['0230IbnSacd.TabaqatKubra', '0378HakimKabir.AsamiWaKuna']"
+220,Shia@أهم مصادر رجال الحديث عند السنة,4,"['0230IbnSacd.TabaqatKubra', '0385Daraqutni.CilalWarida', '0571IbnCasakir.TarikhDimashq', '0748Dhahabi.SiyarAclamNubala']"
+186,Sham@التراجم والطبقات,5,"['0571IbnCasakir.TarikhDimashq', '0711IbnManzurIfriqi.MukhtasarTarikhDimashq', '0748Dhahabi.SiyarAclamNubala', '0748Dhahabi.TarikhIslam', '0832TaqiFasi.CiqdThamin']"
+139,BIO,7,"['0230IbnSacd.TabaqatKubra', '0535QawwamSunna.SiyarSalaf', '0571IbnCasakir.TarikhDimashq', '0711IbnManzurIfriqi.MukhtasarTarikhDimashq', '0748Dhahabi.SiyarAclamNubala', '0748Dhahabi.TarikhIslam', '0774IbnKathir.Bidaya']"
+125,Shamela@التراجم والطبقات,8,"['0230IbnSacd.TabaqatKubra', '0395IbnMandahMuhammad.MacrifatSahaba', '0430AbuNucaymIsbahani.MacrifatSahaba', '0535QawwamSunna.SiyarSalaf', '0571IbnCasakir.TarikhDimashq', '0711IbnManzurIfriqi.MukhtasarTarikhDimashq', '0748Dhahabi.SiyarAclamNubala', '0748Dhahabi.TarikhIslam']"
+116,_TABAQAT,9,"['0230IbnSacd.TabaqatKubra', '0395IbnMandahMuhammad.MacrifatSahaba', '0430AbuNucaymIsbahani.MacrifatSahaba', '0535QawwamSunna.DalailNubuwwa', '0535QawwamSunna.SiyarSalaf', '0571IbnCasakir.TarikhDimashq', '0711IbnManzurIfriqi.MukhtasarTarikhDimashq', '0748Dhahabi.SiyarAclamNubala', '0748Dhahabi.TarikhIslam']"

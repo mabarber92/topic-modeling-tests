@@ -4,6 +4,10 @@ import matplotlib.pyplot as plt
 from scipy.stats import poisson
 import re
 
+def check_make_list(obj):
+    if type(obj) is not list:
+        obj = [obj]
+    return obj
 
 class getTags():
     def __init__ (self, input, col = "tags", input_df = False, use_pri = False, use_all_versions=False):
@@ -84,7 +88,7 @@ class uriTopicMetadata():
         self.meta_df_full = meta_df.copy()
         self.meta_df = meta_df[meta_df["status"] == "pri"]
         self.meta_df["ms-total"] = self.meta_df["tok_length"]/300
-        self.topic_uri_df = pd.read_csv(topic_csv)[["Topic", "uri", "ms"]].drop_duplicates()
+        self.topic_uri_df = pd.read_csv(topic_csv)[["Topic", "uri", "ms"]]
         
         if len(topic_filter) > 0:            
             self.filter_topics(topic_filter)
@@ -166,6 +170,40 @@ class uriTopicMetadata():
         if csv_out:
             data_filtered.to_csv(csv_out, index=False)
         return data_filtered
+    
+    # Output df with URI, topic cols and ms counts
+    def book_uri_occurance_counts_by_topic(self, uris):
+        uris = check_make_list(uris)
+        uris_df = self.fetch_book_uris(uris)
+        all_topics = uris_df["Topic"].drop_duplicates().to_list()
+        out_dicts = []
+        for topic in all_topics:
+            topic_dict = {"Topic": topic}
+            topic_filtered = uris_df[uris_df["Topic"] == topic]
+            for uri in uris:
+                occ_count = len(topic_filtered[topic_filtered["book"] == uri])
+                topic_dict[uri] = occ_count
+            out_dicts.append(topic_dict)
+        return pd.DataFrame(out_dicts)
+
+
+    # List topics associated with URI
+    def list_topics_for_book_uris(self, uris):
+        uris = check_make_list(uris)
+        uris_df = self.fetch_book_uris(uris)
+        output = []
+        for uri in uris:
+            uri_topics = uris_df[uris_df["book"] == uri]["Topic"].to_list()
+            output.append({"uri": uri, "Topics": uri_topics})
+        print(output)
+        return output
+
+
+    # Fetch all rows with URIs
+    def fetch_book_uris(self, uris):
+        uris = check_make_list(uris)
+        return self.topic_uri_df[self.topic_uri_df["book"].isin(uris)].sort_values(by=["Topic"])
+    
     # Graph by death date
     def hist_on_field(self, field="date", image_path = None, ax_loc = None, hue_on_tags = False):
         if ax_loc == None:
@@ -258,9 +296,8 @@ class uriTopicMetadata():
         poisson_dicts = []
         meta_data = self.meta_df
         main_data = self.topic_uri_df
-        for i in range(0, 1000, 25):
-            print(i)
-            listed_values = list(range(i,i+24))
+        for i in range(0, 1000, interval):            
+            listed_values = list(range(i,i+interval))            
             if on == "tokens":
                 meta = meta_data[meta_data[field].isin(listed_values)]["tok_length"].sum()
                 main_count = len(main_data[main_data[field].isin(listed_values)])
@@ -284,16 +321,16 @@ class uriTopicMetadata():
         poisson_df = pd.DataFrame(poisson_dicts)
 
         g = sns.histplot(poisson_df, x="year", weights="freq", binwidth=25, binrange=(0,1000))
-        for item in poisson_dicts:
+        for item in poisson_dicts:            
             year = item["year"]
-            year_end = year + 24
-            if item["poisson_prob"] > 0.95:
+            year_end = year + interval-1
+            if item["poisson_prob"] > 0.95:                
                 colour = "green"
                 if fetch_sig_neg:
                     val_list = list(range(year, year_end))
                     csv_out = "{}-negative-outlier-{}-{}.csv".format(on, year, year_end)
                     self.fetch_data_by_list(val_list, csv_out=csv_out)
-            elif item["poisson_prob"] < 0.05:
+            elif item["poisson_prob"] < 0.05:                
                 colour = "red"
                 if fetch_sig_pos:
                     val_list = list(range(year, year_end))
@@ -432,37 +469,51 @@ def count_unique_books_in_tags_df(csv):
     unique_books.remove('')
     print(unique_books)
     print("{} Unique books in {}".format(len(unique_books), csv))
+    return unique_books
 
 
 if __name__ == "__main__":
     
-    count_unique_books_in_tags_df("C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/tasks/output/Yusuf-hadith-history-tags.csv")
+    uris = unique_books = count_unique_books_in_tags_df("C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/tasks/output/Yusuf-hadith-sira-tags.csv")
     # graphing_sets = [
     #     {"graph_path": "Yusuf-Hadith-comp-ms-uri+hadith-uris.png", "comp_meta_tags": ["_HADITH", "GAL@hadith"], "graphing_par": "uri-ms", "title-word": "Hadith"}, 
     #     {"graph_path": "Yusuf-Hadith-comp-uri+hadith-uris.png", "comp_meta_tags": ["_HADITH", "GAL@hadith"], "graphing_par": "uri", "title-word": "Hadith"},
     #     {"graph_path": "Yusuf-Hadith-comp-uri+hadith-authors.png", "comp_meta_tags": ["_HADITH", "GAL@hadith"], "graphing_par": "author_from_uri", "title-word": "Hadith"},
     #      {"graph_path": "Yusuf-Hadith-sentence-counts.png", "comp_meta_tags": None, "graphing_par": None, "title-word": ""}]
     
-    # data_path = "E:/topicModelling/data/outputs/searchModelling/results-camelbert-seed10-run2-outliers4.csv"
+    data_path = "C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/data/outputs/searchModelling/results-camelbert-seed10-run2-outliers4-msfixed.csv"
 
-    # meta_path = "E:/Corpus Stats/2022/OpenITI_metadata_2022-1-6_merged.csv"
+    meta_path = "D:/Corpus Stats/2022/OpenITI_metadata_2022-1-6_merged.csv"
 
-    # topic_focus = "C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/tasks/output/Yusuf-famine-hadith.csv"
+    topic_focus = "C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/tasks/output/Yusuf-famine-hadith.csv"
 
-    # topic_list = pd.read_csv(topic_focus)["Topic"].tolist()
-    # if "Total" in topic_list:
-    #     topic_list.remove("Total")
-    # topic_list = [int(t) for t in topic_list]
-    # print(topic_list)
+    topic_list = pd.read_csv(topic_focus)["Topic"].tolist()
+    if "Total" in topic_list:
+        topic_list.remove("Total")
+    topic_list = [int(t) for t in topic_list]
+    print(topic_list)
 
-    # topic_meta = uriTopicMetadata(meta_path, data_path, topic_filter = topic_list)
+    topic_meta = uriTopicMetadata(meta_path, data_path, topic_filter = topic_list)
 
+    # print("{} phrases with these tags out of a total of {} sentences".format(len(topic_meta.fetch_book_uris(uris)), len(topic_meta.topic_uri_df)))
+
+
+    # uris = ["0310Tabari.Tarikh", "0310Tabari.JamicBayan"]
+    per_uri_book_df = topic_meta.book_uri_occurance_counts_by_topic(uris)
+    per_uri_book_df.to_csv("all-sira-topic-ms-counts.csv", index=False)
+    # per_uri_book_df_filtered = per_uri_book_df[per_uri_book_df["Topic"].isin(topic_list)]
+
+    uri_filtered_df = topic_meta.fetch_book_uris(uris)[["Topic", "uri", "ms"]].sort_values(by=["uri", "ms"])
+    uri_filtered_df.to_csv("hadith-sira-bio-topic-ms.csv", index=False)
+
+    # per_uri_book_df_filtered.to_csv("Tabari-tops-comp-Yusuf-hadith.csv", index=False)
   
     # Test poisson
-    # poisson_df, g = topic_meta.calculate_poisson(image_path="tok-count-poisson.png")
+    # poisson_df, g = topic_meta.calculate_poisson(image_path="tok-count-poisson.png", fetch_sig_neg=True)
     # poisson_df.to_csv("tok_count_poisson.csv")
-    # poisson_df, g = topic_meta.calculate_poisson(image_path="uri-poisson.png", on = "uri")
+    # poisson_df, g = topic_meta.calculate_poisson(image_path="uri-poisson.png", on = "uri", fetch_sig_neg=True)
     # poisson_df.to_csv("uri_poisson.csv")
+
     # topic_meta.fetch_data_by_list(val_list=["GAL@history", "GAL@historiography"], csv_out="gal-history-historiography.csv", field="tags")
     # topic_meta.fetch_data_by_list(val_list=["GAL@history-world", "GAL@history-universal"], csv_out="gal-history-world-universal.csv", field="tags")
 

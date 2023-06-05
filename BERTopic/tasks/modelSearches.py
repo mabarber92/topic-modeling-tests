@@ -35,27 +35,40 @@ def modelSearches(searchCsv, outCsv, summaryCsv, vizOut, treeOut, saveModel = No
 
 if __name__ == "__main__":
     
-    inputFile = "../../data/inputs/searchResults/largerWindow/results.csv"
+    inputFile = "../../data/inputs/searchResults/Moses/results.csv"
     LargeOutputFolder = "../../data/outputs/searchModelling/"
     outputFolder = "./output/"
-    outCsv = LargeOutputFolder + "results-arabert-seed100-run1.csv"
-    outSummary = outputFolder + "results-arabert-seed100-summary-run1.csv"
-    modelOut = outputFolder + "results-arabert-seed100.model"
-    vizOut = outputFolder + "results-arabert-seed100-viz-whier-run1.html"
-    treeOut = outputFolder + "results-arabert-seed100-tree-whier-run1.txt"
+    outCsv = LargeOutputFolder + "results-moses-camelbert-ca-seed100-run1.csv"
+    outSummary = outputFolder + "results-moses-camelbert-ca-seed100-run1.csv"
+    modelOut = outputFolder + "results-moses-camelbert-ca-seed100.model"
+    vizOut = outputFolder + "results-moses-camelbert-ca-seed100-run1.html"
+    treeOut = outputFolder + "results-moses-camelbert-ca-seed100-run1.txt"
 
-    outCsv2 = LargeOutputFolder + "results-arabert-seed100-run2.csv"
-    outSummary2 = outputFolder + "results-arabert-seed100-summary-run2.csv"
-    modelOut2 = outputFolder + "results-arabert-seed100.model"
-    vizOut2 = outputFolder + "results-arabert-seed100-viz-whier-run2.html"
-    treeOut2 = outputFolder + "results-arabert-seed100-tree-whier-run2.txt"
-    # cutInput = outputFolder + "cutInput.csv"
-    # dfCut = pd.read_csv(inputFile).loc[0:5000]
-    # dfCut.to_csv(cutInput, index = False, encoding = 'utf-8-sig')
+    outCsv2 = LargeOutputFolder + "results-moses-camelbert-ca-seed100-run2.csv"
+    outSummary2 = outputFolder + "results-moses-camelbert-ca-seed100-summary-run2.csv"
+    modelOut2 = outputFolder + "results-moses-camelbert-ca-seed100.model"
+    vizOut2 = outputFolder + "results-moses-camelbert-ca-seed100-run2.html"
+    treeOut2 = outputFolder + "results-moses-camelbert-ca-seed100-run2.txt"
 
     modelSearches(inputFile, outCsv, outSummary, vizOut, treeOut, modelOut, seed=100)
     modelSearches(inputFile, outCsv2, outSummary2, vizOut2, treeOut2, modelOut, seed=100)
 
+    inputFile = "../../data/inputs/searchResults/Noah/results.csv"
+    LargeOutputFolder = "../../data/outputs/searchModelling/"
+    outputFolder = "./output/"
+    outCsv = LargeOutputFolder + "results-noah-camelbert-ca-seed100-run1.csv"
+    outSummary = outputFolder + "results-noah-camelbert-ca-seed100-run1.csv"
+    modelOut = outputFolder + "results-noah-camelbert-ca-seed100.model"
+    vizOut = outputFolder + "results-noah-camelbert-ca-seed100-run1.html"
+    treeOut = outputFolder + "results-noah-camelbert-ca-seed100-run1.txt"
 
+    outCsv2 = LargeOutputFolder + "results-noah-camelbert-ca-seed100-run2.csv"
+    outSummary2 = outputFolder + "results-noah-camelbert-ca-seed100-summary-run2.csv"
+    modelOut2 = outputFolder + "results-noah-camelbert-ca-seed100.model"
+    vizOut2 = outputFolder + "results-noah-camelbert-ca-seed100-run2.html"
+    treeOut2 = outputFolder + "results-noah-camelbert-ca-seed100-run2.txt"
+
+    modelSearches(inputFile, outCsv, outSummary, vizOut, treeOut, modelOut, seed=100)
+    modelSearches(inputFile, outCsv2, outSummary2, vizOut2, treeOut2, modelOut, seed=100)
 
 
