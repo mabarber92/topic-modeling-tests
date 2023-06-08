@@ -474,37 +474,37 @@ def count_unique_books_in_tags_df(csv):
 
 if __name__ == "__main__":
     
-    uris = unique_books = count_unique_books_in_tags_df("C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/tasks/output/Yusuf-hadith-sira-tags.csv")
+    # uris = unique_books = count_unique_books_in_tags_df("C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/tasks/output/Yusuf-hadith-sira-tags.csv")
     # graphing_sets = [
     #     {"graph_path": "Yusuf-Hadith-comp-ms-uri+hadith-uris.png", "comp_meta_tags": ["_HADITH", "GAL@hadith"], "graphing_par": "uri-ms", "title-word": "Hadith"}, 
     #     {"graph_path": "Yusuf-Hadith-comp-uri+hadith-uris.png", "comp_meta_tags": ["_HADITH", "GAL@hadith"], "graphing_par": "uri", "title-word": "Hadith"},
     #     {"graph_path": "Yusuf-Hadith-comp-uri+hadith-authors.png", "comp_meta_tags": ["_HADITH", "GAL@hadith"], "graphing_par": "author_from_uri", "title-word": "Hadith"},
     #      {"graph_path": "Yusuf-Hadith-sentence-counts.png", "comp_meta_tags": None, "graphing_par": None, "title-word": ""}]
     
-    data_path = "C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/data/outputs/searchModelling/results-camelbert-seed10-run2-outliers4-msfixed.csv"
+    data_path = "E:/topicModelling/data/outputs/searchModelling/results-noah-camelbert-ca-seed100-run1.csv"
 
-    meta_path = "D:/Corpus Stats/2022/OpenITI_metadata_2022-1-6_merged.csv"
+    meta_path = "E:/Corpus Stats/2022/OpenITI_metadata_2022-1-6_merged.csv"
 
-    topic_focus = "C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/tasks/output/Yusuf-famine-hadith.csv"
+    # topic_focus = "C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/tasks/output/Yusuf-famine-hadith.csv"
 
-    topic_list = pd.read_csv(topic_focus)["Topic"].tolist()
-    if "Total" in topic_list:
-        topic_list.remove("Total")
-    topic_list = [int(t) for t in topic_list]
-    print(topic_list)
+    # topic_list = pd.read_csv(topic_focus)["Topic"].tolist()
+    # if "Total" in topic_list:
+    #     topic_list.remove("Total")
+    # topic_list = [int(t) for t in topic_list]
+    # print(topic_list)
 
-    topic_meta = uriTopicMetadata(meta_path, data_path, topic_filter = topic_list)
+    # topic_meta = uriTopicMetadata(meta_path, data_path, topic_filter = topic_list)
 
     # print("{} phrases with these tags out of a total of {} sentences".format(len(topic_meta.fetch_book_uris(uris)), len(topic_meta.topic_uri_df)))
 
-
-    # uris = ["0310Tabari.Tarikh", "0310Tabari.JamicBayan"]
+    topic_meta = uriTopicMetadata(meta_path, data_path)
+    uris = ["0179MalikIbnAnas.Muwatta", "0150AbuHanifa.Musnad", "0204Shafici.Musnad", "0256Bukhari.Sahih", "0241IbnHanbal.Musnad", "0261Muslim.Sahih"]
     per_uri_book_df = topic_meta.book_uri_occurance_counts_by_topic(uris)
-    per_uri_book_df.to_csv("all-sira-topic-ms-counts.csv", index=False)
+    per_uri_book_df.to_csv("noah-canonical-hadith-topics.csv", index=False)
     # per_uri_book_df_filtered = per_uri_book_df[per_uri_book_df["Topic"].isin(topic_list)]
 
-    uri_filtered_df = topic_meta.fetch_book_uris(uris)[["Topic", "uri", "ms"]].sort_values(by=["uri", "ms"])
-    uri_filtered_df.to_csv("hadith-sira-bio-topic-ms.csv", index=False)
+    # uri_filtered_df = topic_meta.fetch_book_uris(uris)[["Topic", "uri", "ms"]].sort_values(by=["uri", "ms"])
+    # uri_filtered_df.to_csv("hadith-sira-bio-topic-ms.csv", index=False)
 
     # per_uri_book_df_filtered.to_csv("Tabari-tops-comp-Yusuf-hadith.csv", index=False)
   
