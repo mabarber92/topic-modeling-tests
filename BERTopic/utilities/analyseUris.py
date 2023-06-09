@@ -3,6 +3,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from scipy.stats import poisson
 import re
+import os
 
 def check_make_list(obj):
     if type(obj) is not list:
@@ -88,8 +89,12 @@ class uriTopicMetadata():
         self.meta_df_full = meta_df.copy()
         self.meta_df = meta_df[meta_df["status"] == "pri"]
         self.meta_df["ms-total"] = self.meta_df["tok_length"]/300
-        self.topic_uri_df = pd.read_csv(topic_csv)[["Topic", "uri", "ms"]]
+        topic_df = pd.read_csv(topic_csv)[["Topic", "uri", "ms"]]
+        self.topic_uri_df = topic_df
         
+        # Store the whole df - in case different topic filters need to be applied later
+        self._topic_df_whole = topic_df
+
         if len(topic_filter) > 0:            
             self.filter_topics(topic_filter)
 
@@ -114,8 +119,14 @@ class uriTopicMetadata():
         return self.meta_df_full[self.meta_df_full["book"].isin(book_list)]
 
     # Function for filtering topics
-    def filter_topics(self, topic_list):
-        self.topic_uri_df = self.topic_uri_df[self.topic_uri_df["Topic"].isin(topic_list)]
+    def filter_topics(self, topic_list, new_filter=False):
+        if new_filter:
+            self.topic_uri_df = self._topic_df_whole[self._topic_df_whole["Topic"].isin(topic_list)]
+            self.topic_uri_df["uri-ms"] = self.topic_uri_df["uri"] + self.topic_uri_df["ms"].astype("str")
+            self.topic_uri_df = self.merge_meta(self.topic_uri_df)
+        else:
+            self.topic_uri_df = self.topic_uri_df[self.topic_uri_df["Topic"].isin(topic_list)]
+
     
     # Count unique in field
     def count_unique(self, field):
@@ -250,6 +261,13 @@ class uriTopicMetadata():
             figure.savefig(image_path, dpi=300, bbox_inches='tight')
         return g
     
+    def fetch_df_on_date_range(self, date_start, date_end, csv_out=None):
+        dates_list = list(range(date_start, date_end))
+        filtered_df = self.topic_uri_df[self.topic_uri_df["date"].isin(dates_list)][["Topic", "uri", "ms"]]
+        if csv_out:
+            filtered_df.to_csv(csv_out, index=False)
+        return filtered_df
+
     def hist_perc(self, field, image_path = None, ax_loc = None):
         if ax_loc == None:
             plt.clf()
@@ -481,26 +499,65 @@ if __name__ == "__main__":
     #     {"graph_path": "Yusuf-Hadith-comp-uri+hadith-authors.png", "comp_meta_tags": ["_HADITH", "GAL@hadith"], "graphing_par": "author_from_uri", "title-word": "Hadith"},
     #      {"graph_path": "Yusuf-Hadith-sentence-counts.png", "comp_meta_tags": None, "graphing_par": None, "title-word": ""}]
     
-    data_path = "E:/topicModelling/data/outputs/searchModelling/results-noah-camelbert-ca-seed100-run1.csv"
+    data_path = "D:/topicModelling/data/outputs/searchModelling/results-moses-camelbert-ca-seed100-run1.csv"
 
-    meta_path = "E:/Corpus Stats/2022/OpenITI_metadata_2022-1-6_merged.csv"
+    meta_path = "D:/Corpus Stats/2022/OpenITI_metadata_2022-1-6_merged.csv"
 
-    # topic_focus = "C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/tasks/output/Yusuf-famine-hadith.csv"
+    topic_focus = "C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/tasks/output/Yusuf-famine-hadith.csv"
 
-    # topic_list = pd.read_csv(topic_focus)["Topic"].tolist()
-    # if "Total" in topic_list:
-    #     topic_list.remove("Total")
-    # topic_list = [int(t) for t in topic_list]
-    # print(topic_list)
+    topic_list = pd.read_csv(topic_focus)["Topic"].tolist()
+    if "Total" in topic_list:
+        topic_list.remove("Total")
+    topic_list = [int(t) for t in topic_list]
+    print(topic_list)
 
-    # topic_meta = uriTopicMetadata(meta_path, data_path, topic_filter = topic_list)
+    topic_meta = uriTopicMetadata(meta_path, data_path, topic_filter = topic_list)
+
+    df = topic_meta.fetch_df_on_date_range(275,300, csv_out="Yusuf-hadith-dates275-300.csv")
+
+    # # Loop through a set of topic focus csvs and do analysis on that focus
+    # topic_focus_folder = "C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/tasks/output/hadith-topics-other-prophets/moses/"
+    # date_ranges = [[250,275], [275,300], [300,325], [825,850], [875,900], [900,925], [925,950]]
+    # # Firstly initiate all the data
+    # topic_meta = uriTopicMetadata(meta_path, data_path)
+
+    # # Loop through the folder
+    # for root, dirs, files in os.walk(topic_focus_folder, topdown=False):
+    #     for name in files:
+    #         path = os.path.join(root, name)
+    #         topic_list = pd.read_csv(path)["Topic"].tolist()
+    #         if "Total" in topic_list:
+    #             topic_list.remove("Total")
+    #         topic_list = [int(t) for t in topic_list]
+    #         print(topic_list)
+
+    #         out_file_pre = name.split(".")[0]
+
+    #         topic_meta.filter_topics(topic_list, new_filter=True)
+
+    #         # # Calculate poissons for filtered df and output
+    #         # poisson_df, g = topic_meta.calculate_poisson(image_path="{}-tok-count-poisson.png".format(out_file_pre), fetch_sig_pos=False)
+    #         # poisson_df.to_csv("{}-tok_count_poisson.csv".format(out_file_pre))
+    #         # poisson_df, g = topic_meta.calculate_poisson(image_path="{}-uri-poisson.png".format(out_file_pre), on = "uri", fetch_sig_pos=False)
+    #         # poisson_df.to_csv("{}-uri_poisson.csv".format(out_file_pre))
+
+    #         # Loop through list of date ranges and output csvs containing those uris for those ranges by topic
+    #         for date_range in date_ranges:
+    #             start = date_range[0]
+    #             end = date_range[1]
+    #             # Create a path for the output
+    #             if not os.path.exists(out_file_pre):
+    #                 os.mkdir(out_file_pre)
+    #             out_path = os.path.join(out_file_pre, "dates{}-{}.csv".format(start, end))
+    #             # Run the filter
+    #             df = topic_meta.fetch_df_on_date_range(start, end, csv_out=out_path)
 
     # print("{} phrases with these tags out of a total of {} sentences".format(len(topic_meta.fetch_book_uris(uris)), len(topic_meta.topic_uri_df)))
 
-    topic_meta = uriTopicMetadata(meta_path, data_path)
-    uris = ["0179MalikIbnAnas.Muwatta", "0150AbuHanifa.Musnad", "0204Shafici.Musnad", "0256Bukhari.Sahih", "0241IbnHanbal.Musnad", "0261Muslim.Sahih"]
-    per_uri_book_df = topic_meta.book_uri_occurance_counts_by_topic(uris)
-    per_uri_book_df.to_csv("noah-canonical-hadith-topics.csv", index=False)
+    # topic_meta = uriTopicMetadata(meta_path, data_path)
+    # uris = ["0179MalikIbnAnas.Muwatta", "0150AbuHanifa.Musnad", "0204Shafici.Musnad", "0256Bukhari.Sahih", "0241IbnHanbal.Musnad", "0261Muslim.Sahih"]
+    # per_uri_book_df = topic_meta.book_uri_occurance_counts_by_topic(uris)
+    # per_uri_book_df.to_csv("noah-canonical-hadith-topics.csv", index=False)
     # per_uri_book_df_filtered = per_uri_book_df[per_uri_book_df["Topic"].isin(topic_list)]
 
     # uri_filtered_df = topic_meta.fetch_book_uris(uris)[["Topic", "uri", "ms"]].sort_values(by=["uri", "ms"])
@@ -509,9 +566,9 @@ if __name__ == "__main__":
     # per_uri_book_df_filtered.to_csv("Tabari-tops-comp-Yusuf-hadith.csv", index=False)
   
     # Test poisson
-    # poisson_df, g = topic_meta.calculate_poisson(image_path="tok-count-poisson.png", fetch_sig_neg=True)
+    # poisson_df, g = topic_meta.calculate_poisson(image_path="tok-count-poisson.png")
     # poisson_df.to_csv("tok_count_poisson.csv")
-    # poisson_df, g = topic_meta.calculate_poisson(image_path="uri-poisson.png", on = "uri", fetch_sig_neg=True)
+    # poisson_df, g = topic_meta.calculate_poisson(image_path="uri-poisson.png", on = "uri")
     # poisson_df.to_csv("uri_poisson.csv")
 
     # topic_meta.fetch_data_by_list(val_list=["GAL@history", "GAL@historiography"], csv_out="gal-history-historiography.csv", field="tags")
