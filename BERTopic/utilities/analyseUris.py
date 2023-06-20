@@ -211,9 +211,12 @@ class uriTopicMetadata():
 
 
     # Fetch all rows with URIs
-    def fetch_book_uris(self, uris):
+    def fetch_book_uris(self, uris, opposite=False):
         uris = check_make_list(uris)
-        return self.topic_uri_df[self.topic_uri_df["book"].isin(uris)].sort_values(by=["Topic"])
+        if opposite:
+            return self.topic_uri_df[~self.topic_uri_df["book"].isin(uris)].sort_values(by=["Topic"])
+        else:
+            return self.topic_uri_df[self.topic_uri_df["book"].isin(uris)].sort_values(by=["Topic"])
     
     # Graph by death date
     def hist_on_field(self, field="date", image_path = None, ax_loc = None, hue_on_tags = False):
@@ -492,14 +495,15 @@ def count_unique_books_in_tags_df(csv):
 
 if __name__ == "__main__":
     
-    # uris = unique_books = count_unique_books_in_tags_df("C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/tasks/output/Yusuf-hadith-sira-tags.csv")
+    uris = unique_books = count_unique_books_in_tags_df("C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/tasks/output/Yusuf-hadith-quran-tags.csv")
+    # print(len(uris))
     # graphing_sets = [
     #     {"graph_path": "Yusuf-Hadith-comp-ms-uri+hadith-uris.png", "comp_meta_tags": ["_HADITH", "GAL@hadith"], "graphing_par": "uri-ms", "title-word": "Hadith"}, 
     #     {"graph_path": "Yusuf-Hadith-comp-uri+hadith-uris.png", "comp_meta_tags": ["_HADITH", "GAL@hadith"], "graphing_par": "uri", "title-word": "Hadith"},
     #     {"graph_path": "Yusuf-Hadith-comp-uri+hadith-authors.png", "comp_meta_tags": ["_HADITH", "GAL@hadith"], "graphing_par": "author_from_uri", "title-word": "Hadith"},
     #      {"graph_path": "Yusuf-Hadith-sentence-counts.png", "comp_meta_tags": None, "graphing_par": None, "title-word": ""}]
     
-    data_path = "D:/topicModelling/data/outputs/searchModelling/results-moses-camelbert-ca-seed100-run1.csv"
+    data_path = "D:/topicModelling/data/outputs/searchModelling/results-camelbert-seed10-run2-outliers4-msfixed.csv"
 
     meta_path = "D:/Corpus Stats/2022/OpenITI_metadata_2022-1-6_merged.csv"
 
@@ -513,7 +517,7 @@ if __name__ == "__main__":
 
     topic_meta = uriTopicMetadata(meta_path, data_path, topic_filter = topic_list)
 
-    df = topic_meta.fetch_df_on_date_range(275,300, csv_out="Yusuf-hadith-dates275-300.csv")
+    # df = topic_meta.fetch_df_on_date_range(275,300, csv_out="Yusuf-hadith-dates275-300.csv")
 
     # # Loop through a set of topic focus csvs and do analysis on that focus
     # topic_focus_folder = "C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/tasks/output/hadith-topics-other-prophets/moses/"
@@ -560,8 +564,9 @@ if __name__ == "__main__":
     # per_uri_book_df.to_csv("noah-canonical-hadith-topics.csv", index=False)
     # per_uri_book_df_filtered = per_uri_book_df[per_uri_book_df["Topic"].isin(topic_list)]
 
-    # uri_filtered_df = topic_meta.fetch_book_uris(uris)[["Topic", "uri", "ms"]].sort_values(by=["uri", "ms"])
-    # uri_filtered_df.to_csv("hadith-sira-bio-topic-ms.csv", index=False)
+    uri_filtered_df = topic_meta.fetch_book_uris(uris)[["Topic", "uri", "ms"]].sort_values(by=["uri", "ms"])
+    print(len(uri_filtered_df))
+    # uri_filtered_df.to_csv("hadith-sira-non-hadith.csv", index=False)
 
     # per_uri_book_df_filtered.to_csv("Tabari-tops-comp-Yusuf-hadith.csv", index=False)
   
