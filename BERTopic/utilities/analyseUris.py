@@ -499,21 +499,23 @@ if __name__ == "__main__":
     #     {"graph_path": "Yusuf-Hadith-comp-uri+hadith-authors.png", "comp_meta_tags": ["_HADITH", "GAL@hadith"], "graphing_par": "author_from_uri", "title-word": "Hadith"},
     #      {"graph_path": "Yusuf-Hadith-sentence-counts.png", "comp_meta_tags": None, "graphing_par": None, "title-word": ""}]
     
-    data_path = "D:/topicModelling/data/outputs/searchModelling/results-moses-camelbert-ca-seed100-run1.csv"
+    data_path = "E:/topicModelling/data/outputs/searchModelling/outlierComp/topics-6-outThres.csv"
 
-    meta_path = "D:/Corpus Stats/2022/OpenITI_metadata_2022-1-6_merged.csv"
+    meta_path = "E:/Corpus Stats/2022/OpenITI_metadata_2022-1-6_merged.csv"
 
     topic_focus = "C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/tasks/output/Yusuf-famine-hadith.csv"
 
-    topic_list = pd.read_csv(topic_focus)["Topic"].tolist()
-    if "Total" in topic_list:
-        topic_list.remove("Total")
-    topic_list = [int(t) for t in topic_list]
-    print(topic_list)
+    # topic_list = pd.read_csv(topic_focus)["Topic"].tolist()
+    # if "Total" in topic_list:
+    #     topic_list.remove("Total")
+    # topic_list = [int(t) for t in topic_list]
+    # print(topic_list)
+
+    topic_list = [251,346]
 
     topic_meta = uriTopicMetadata(meta_path, data_path, topic_filter = topic_list)
 
-    df = topic_meta.fetch_df_on_date_range(275,300, csv_out="Yusuf-hadith-dates275-300.csv")
+    # df = topic_meta.fetch_df_on_date_range(275,300, csv_out="Yusuf-hadith-dates275-300.csv")
 
     # # Loop through a set of topic focus csvs and do analysis on that focus
     # topic_focus_folder = "C:/Users/mathe/Documents/Github-repos/topic-modeling-tests/BERTopic/tasks/output/hadith-topics-other-prophets/moses/"
@@ -566,10 +568,10 @@ if __name__ == "__main__":
     # per_uri_book_df_filtered.to_csv("Tabari-tops-comp-Yusuf-hadith.csv", index=False)
   
     # Test poisson
-    # poisson_df, g = topic_meta.calculate_poisson(image_path="tok-count-poisson.png")
-    # poisson_df.to_csv("tok_count_poisson.csv")
-    # poisson_df, g = topic_meta.calculate_poisson(image_path="uri-poisson.png", on = "uri")
-    # poisson_df.to_csv("uri_poisson.csv")
+    poisson_df, g = topic_meta.calculate_poisson(image_path="night-journey-tok-count-poisson.png")
+    poisson_df.to_csv("night-journey-tok_count_poisson.csv")
+    poisson_df, g = topic_meta.calculate_poisson(image_path="night-journey-uri-poisson.png", on = "uri")
+    poisson_df.to_csv("night-journey-uri_poisson.csv")
 
     # topic_meta.fetch_data_by_list(val_list=["GAL@history", "GAL@historiography"], csv_out="gal-history-historiography.csv", field="tags")
     # topic_meta.fetch_data_by_list(val_list=["GAL@history-world", "GAL@history-universal"], csv_out="gal-history-world-universal.csv", field="tags")
